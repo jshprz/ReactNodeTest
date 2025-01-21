@@ -11,6 +11,7 @@ import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { MeetingSchema } from 'schema';
 import { getApi, postApi } from 'services/api';
+import moment from 'moment';
 
 const AddMeeting = (props) => {
     const { onClose, isOpen, setAction, from, fetchData, view } = props
@@ -43,13 +44,33 @@ const AddMeeting = (props) => {
         initialValues: initialValues,
         validationSchema: MeetingSchema,
         onSubmit: (values, { resetForm }) => {
-            
+            AddData();
+            resetForm();
         },
     });
     const { errors, touched, values, handleBlur, handleChange, handleSubmit, setFieldValue } = formik
 
     const AddData = async () => {
+        try {
+            setIsLoding(true);
 
+            if (values?.dateTime) {
+                let dateTime = moment(values?.dateTime).format('YYYY-MM-DD HH:mm');
+                values.dateTime = dateTime;
+            }
+
+            let response = await postApi('api/meeting/add', values);
+
+            if (response.status === 200) {
+                formik.resetForm();
+                onClose();
+                fetchData(1);
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsLoding(false);
+        }
     };
 
     const fetchAllData = async () => {
